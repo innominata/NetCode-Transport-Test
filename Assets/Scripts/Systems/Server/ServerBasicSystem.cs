@@ -4,10 +4,10 @@ using Unity.Entities;
 using Unity.Networking.Transport;
 using UnityEngine;
 
-namespace Systems
+namespace Systems.Server
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-    public partial struct ServerSystem : ISystem
+    public partial struct ServerBasicSystem : ISystem
     {
         public NetworkDriver Driver;
         private NativeList<NetworkConnection> _connections;

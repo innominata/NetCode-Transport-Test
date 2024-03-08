@@ -4,35 +4,35 @@ using Unity.Entities;
 using Unity.Networking.Transport;
 using UnityEngine;
 
-namespace Systems
+namespace Systems.Clients
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
-    public partial struct ClientSystem :ISystem
+    public partial struct ClientBasicSystem :ISystem
     {
-        public NetworkDriver m_Driver;
-        public NetworkConnection m_Connection;
+        public NetworkDriver Driver;
+        public NetworkConnection Connection;
         public bool Done;
         
         public void OnCreate(ref SystemState state)
         {
-            m_Driver = NetworkDriver.Create();
-            m_Connection = default(NetworkConnection);
+            Driver = NetworkDriver.Create();
+            Connection = default;
 
             NetworkEndpoint endpoint = NetworkEndpoint.LoopbackIpv4;
             endpoint.Port = 9000;
-            m_Connection = m_Driver.Connect(endpoint);
+            Connection = Driver.Connect(endpoint);
         }
 
         public void OnDestroy(ref SystemState state)
         {
-            m_Driver.Dispose();
+            Driver.Dispose();
         }
 
         public void OnUpdate(ref SystemState state)
         {
-            m_Driver.ScheduleUpdate().Complete();
+            Driver.ScheduleUpdate().Complete();
 
-            if (!m_Connection.IsCreated)
+            if (!Connection.IsCreated)
             {
                 if (!Done)
                 {
@@ -42,7 +42,7 @@ namespace Systems
             }
 
             NetworkEvent.Type cmd;
-            while ((cmd = m_Connection.PopEvent(m_Driver, out DataStreamReader stream)) != NetworkEvent.Type.Empty)
+            while ((cmd = Connection.PopEvent(Driver, out DataStreamReader stream)) != NetworkEvent.Type.Empty)
             {
                 switch (cmd)
                 {
@@ -50,10 +50,10 @@ namespace Systems
                     {
                         Debug.Log("We are now connected to the server");
 
-                        uint value = 1;
-                        m_Driver.BeginSend(m_Connection, out var writer);
+                        const uint value = 1;
+                        Driver.BeginSend(Connection, out DataStreamWriter writer);
                         writer.WriteUInt(value);
-                        m_Driver.EndSend(writer);
+                        Driver.EndSend(writer);
                         break;
                     }
                     case NetworkEvent.Type.Data:
@@ -61,13 +61,13 @@ namespace Systems
                         uint value = stream.ReadUInt();
                         Debug.Log("Got the value = " + value + " back from the server");
                         Done = true;
-                        m_Connection.Disconnect(m_Driver);
-                        m_Connection = default(NetworkConnection);
+                        Connection.Disconnect(Driver);
+                        Connection = default(NetworkConnection);
                         break;
                     }
                     case NetworkEvent.Type.Disconnect:
                         Debug.Log("Client got disconnected from server");
-                        m_Connection = default(NetworkConnection);
+                        Connection = default(NetworkConnection);
                         break;
                     case NetworkEvent.Type.Empty:
                         break;
