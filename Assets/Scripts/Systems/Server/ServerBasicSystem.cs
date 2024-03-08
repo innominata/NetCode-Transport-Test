@@ -14,6 +14,7 @@ namespace Systems.Server
 
         public void OnCreate(ref SystemState state)
         {
+            state.Enabled = false;
             // creates a NetworkDriver instance without any parameters.
             Driver = NetworkDriver.Create();
 
@@ -27,11 +28,11 @@ namespace Systems.Server
             }
             else
             {
-                // The call to the Listen method sets the NetworkDriver to the Listen state, which means the NetworkDriver actively listens for incoming connections.
+                // The call to the Listen method sets the NetworkDriver to the Listen state, which means the NetworkDriver actively listens for incoming Connections.
                 Driver.Listen();
             }
 
-            // m_Connections creates a NativeList to hold all the connections.
+            // m_Connections creates a NativeList to hold all the Connections.
             _connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
         }
 
@@ -94,7 +95,7 @@ namespace Systems.Server
 
         public void AcceptIncomingConnections()
         {
-            // Accept new connections
+            // Accept new Connections
             NetworkConnection c;
             while ((c = Driver.Accept()) != default)
             {
@@ -105,7 +106,7 @@ namespace Systems.Server
 
         public void RemoveStaleConnections()
         {
-            // Clean up connections
+            // Clean up Connections
             for (int i = 0; i < _connections.Length; i++)
             {
                 if (_connections[i].IsCreated) continue;

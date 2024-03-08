@@ -15,6 +15,8 @@ namespace Systems.Clients
         
         public void OnCreate(ref SystemState state)
         {
+             state.Enabled = false;
+            
             Driver = NetworkDriver.Create();
             Connection = default;
 
