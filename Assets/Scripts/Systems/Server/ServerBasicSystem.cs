@@ -1,6 +1,7 @@
 ﻿using System;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Logging;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -24,7 +25,7 @@ namespace Systems.Server
             // binds the NetworkDriver instance to a specific network address and port, and if that doesn't fail, it calls the Listen method
             if (Driver.Bind(endpoint) != 0)
             {
-                Debug.Log("Failed to bind to port 9000");
+                Log.Info("Failed to bind to port 9000");
             }
             else
             {
@@ -69,7 +70,7 @@ namespace Systems.Server
                         case NetworkEvent.Type.Data:
                         {
                             uint number = stream.ReadUInt();
-                            Debug.Log("Got " + number + " from the Client adding + 2 to it.");
+                            Log.Info("Got " + number + " from the Client adding + 2 to it.");
                             number += 2;
 
                             Driver.BeginSend(NetworkPipeline.Null, _connections[i], out var writer);
@@ -78,7 +79,7 @@ namespace Systems.Server
                             break;
                         }
                         case NetworkEvent.Type.Disconnect:
-                            Debug.Log("Client disconnected from server");
+                            Log.Info("Client disconnected from server");
                             _connections[i] = default(NetworkConnection);
                             break;
                         case NetworkEvent.Type.Empty:

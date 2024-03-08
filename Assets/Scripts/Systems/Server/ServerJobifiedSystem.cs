@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Logging;
 using Unity.Networking.Transport;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -28,7 +29,7 @@ namespace Systems.Server
 
             if (Driver.Bind(endpoint) != 0)
             {
-                Debug.Log("Failed to bind to port 9000");
+                Log.Info("Failed to bind to port 9000");
             }
             else
             {
@@ -89,7 +90,7 @@ namespace Systems.Server
                     {
                         uint number = stream.ReadUInt();
 
-                        Debug.Log("Got " + number + " from the Client adding + 2 to it.");
+                        Log.Info("Got " + number + " from the Client adding + 2 to it.");
                         number +=2;
 
                         Driver.BeginSend(Connections[index], out DataStreamWriter writer);
@@ -98,7 +99,7 @@ namespace Systems.Server
                         break;
                     }
                     case NetworkEvent.Type.Disconnect:
-                        Debug.Log("Client disconnected from server");
+                        Log.Info("Client disconnected from server");
                         Connections[index] = default;
                         break;
                     case NetworkEvent.Type.Empty:
@@ -143,7 +144,7 @@ namespace Systems.Server
             while ((c = Driver.Accept()) != default)
             {
                 Connections.Add(c);
-                Debug.Log("Accepted a connection");
+                Log.Info("Accepted a connection");
             }
         }
     }

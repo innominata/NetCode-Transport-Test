@@ -19,7 +19,7 @@
     },
     "com.unity.collections": {
       "version": "2.4.0-pre.5",
-      "depth": 2,
+      "depth": 1,
       "source": "registry",
       "dependencies": {
         "com.unity.burst": "1.8.12",
@@ -102,6 +102,16 @@
       "source": "registry",
       "dependencies": {
         "com.unity.test-framework": "1.1.9"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.logging": {
+      "version": "1.2.0-pre.12",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.burst": "1.8.12",
+        "com.unity.collections": "2.4.0-pre.5"
       },
       "url": "https://packages.unity.com"
     },
@@ -209,7 +219,7 @@
     },
     "com.unity.test-framework": {
       "version": "1.4.3",
-      "depth": 3,
+      "depth": 2,
       "source": "registry",
       "dependencies": {
         "com.unity.ext.nunit": "2.0.3",

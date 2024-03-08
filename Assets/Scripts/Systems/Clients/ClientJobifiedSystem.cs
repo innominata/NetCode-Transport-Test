@@ -3,6 +3,7 @@ using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Logging;
 using Unity.Networking.Transport;
 using UnityEngine;
 
@@ -69,7 +70,7 @@ namespace Systems.Clients
                 {
                     if (!Done[0])
                     {
-                        Debug.Log("Something went wrong during connect");
+                        Log.Info("Something went wrong during connect");
                     }
 
                     return;
@@ -82,7 +83,7 @@ namespace Systems.Clients
                     {
                         case NetworkEvent.Type.Connect:
                         {
-                            Debug.Log("We are now connected to the server");
+                            Log.Info("We are now connected to the server");
 
                             const uint value = 1;
                             Driver.BeginSend(Connection[0], out DataStreamWriter writer);
@@ -93,14 +94,14 @@ namespace Systems.Clients
                         case NetworkEvent.Type.Data:
                         {
                             uint value = stream.ReadUInt();
-                            Debug.Log("Got the value = " + value + " back from the server");
+                            Log.Info("Got the value = " + value + " back from the server");
                             Done[0] = true;
                             Connection[0].Disconnect(Driver);
                             Connection[0] = default;
                             break;
                         }
                         case NetworkEvent.Type.Disconnect:
-                            Debug.Log("Client got disconnected from server");
+                            Log.Info("Client got disconnected from server");
                             Connection[0] = default;
                             break;
                         case NetworkEvent.Type.Empty:
