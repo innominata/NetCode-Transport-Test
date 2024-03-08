@@ -1,4 +1,5 @@
 ﻿using System;
+using Components;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -13,69 +14,81 @@ namespace Systems.Server
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct ServerJobifiedSystem : ISystem
     {
-        public NetworkDriver Driver;
-        public NativeList<NetworkConnection> Connections;
-        
+        public ServerNetworkConfig ServerNetworkConfig;
+
         private JobHandle _serverJobHandle;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
-            Driver = NetworkDriver.Create();
+            state.RequireForUpdate<ServerNetworkConfig>();
+
+
+            NativeList<NetworkConnection> connections = new(16, Allocator.Persistent);
+            NetworkDriver driver = NetworkDriver.Create();
 
             NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4;
             endpoint.Port = 9001;
 
-            if (Driver.Bind(endpoint) != 0)
+            if (driver.Bind(endpoint) != 0)
             {
                 Log.Info("Failed to bind to port 9000");
             }
             else
             {
-                Driver.Listen();
+                driver.Listen();
             }
+
+            ServerNetworkConfig config = new()
+            {
+                Connections = connections,
+                Driver = driver
+            };
+
+            state.EntityManager.CreateSingleton(config);
         }
 
         [BurstCompile]
         public void OnDestroy(ref SystemState state)
         {
-            if (!Driver.IsCreated) return;
+            if (!ServerNetworkConfig.Driver.IsCreated) return;
 
             _serverJobHandle.Complete();
-            Driver.Dispose();
-            Connections.Dispose();
+            ServerNetworkConfig.Driver.Dispose();
+            ServerNetworkConfig.Connections.Dispose();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            ServerNetworkConfig = SystemAPI.GetSingleton<ServerNetworkConfig>();
+            
             _serverJobHandle.Complete();
 
             ServerUpdateConnectionsJob connectionJob = new()
             {
-                Driver = Driver,
-                Connections = Connections
+                Driver = ServerNetworkConfig.Driver,
+                Connections = ServerNetworkConfig.Connections
             };
 
             ServerUpdateJob serverUpdateJob = new()
             {
-                Driver = Driver.ToConcurrent(),
-                Connections = Connections.AsDeferredJobArray()
+                Driver = ServerNetworkConfig.Driver.ToConcurrent(),
+                Connections = ServerNetworkConfig.Connections.AsDeferredJobArray()
             };
 
-            _serverJobHandle = Driver.ScheduleUpdate();
+            _serverJobHandle = ServerNetworkConfig.Driver.ScheduleUpdate();
             _serverJobHandle = connectionJob.Schedule(_serverJobHandle);
-            _serverJobHandle = serverUpdateJob.Schedule(Connections, 1, _serverJobHandle);
+            _serverJobHandle = serverUpdateJob.Schedule(ServerNetworkConfig.Connections, 1, _serverJobHandle);
         }
     }
-    
+
     [BurstCompile]
     public struct ServerUpdateJob : IJobParallelForDefer
     {
         public NetworkDriver.Concurrent Driver;
         public NativeArray<NetworkConnection> Connections;
-        
+
         public void Execute(int index)
         {
             Assert.IsTrue(Connections[index].IsCreated);
@@ -91,7 +104,7 @@ namespace Systems.Server
                         uint number = stream.ReadUInt();
 
                         Log.Info("Got " + number + " from the Client adding + 2 to it.");
-                        number +=2;
+                        number += 2;
 
                         Driver.BeginSend(Connections[index], out DataStreamWriter writer);
                         writer.WriteUInt(number);
@@ -112,19 +125,19 @@ namespace Systems.Server
             }
         }
     }
-    
+
     [BurstCompile]
-    public struct ServerUpdateConnectionsJob  : IJob
+    public struct ServerUpdateConnectionsJob : IJob
     {
         public NetworkDriver Driver;
         public NativeList<NetworkConnection> Connections;
-        
+
         public void Execute()
         {
             RemoveStaleConnections();
             AcceptIncomingConnections();
         }
-        
+
         public void RemoveStaleConnections()
         {
             // Clean up Connections
@@ -136,7 +149,7 @@ namespace Systems.Server
                 --i;
             }
         }
-        
+
         public void AcceptIncomingConnections()
         {
             // Accept new Connections
@@ -148,6 +161,4 @@ namespace Systems.Server
             }
         }
     }
-    
-    
 }

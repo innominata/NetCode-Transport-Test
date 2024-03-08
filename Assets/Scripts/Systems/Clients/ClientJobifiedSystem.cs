@@ -1,58 +1,67 @@
 ﻿using System;
+using Components;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Logging;
 using Unity.Networking.Transport;
-using UnityEngine;
 
 namespace Systems.Clients
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
     public partial struct ClientJobifiedSystem : ISystem
     {
-        public NetworkDriver Driver;
-        public NativeArray<NetworkConnection> Connection;
-        public NativeArray<bool> Done;
         public JobHandle ClientJobHandle;
-
-        [BurstCompile]
+        public ClientNetworkConfig ClientNetworkConfig;
+        
         public void OnCreate(ref SystemState state)
         {
-            Driver = NetworkDriver.Create();
-            Connection = new NativeArray<NetworkConnection>(1, Allocator.Persistent);
-            Done = new NativeArray<bool>(1, Allocator.Persistent);
-
+            state.RequireForUpdate<ClientNetworkConfig>();
+            
+            NetworkSettings settings = new();
+            NetworkDriver driver = NetworkDriver.Create(settings);
+            NetworkPipeline fragmentedPipeline = driver.CreatePipeline(typeof(FragmentationPipelineStage));
+            NativeArray<NetworkConnection> connection = new (1, Allocator.Persistent);
+            NativeArray<bool> done = new (1, Allocator.Persistent);
             NetworkEndpoint endpoint = NetworkEndpoint.LoopbackIpv4;
             endpoint.Port = 9001;
 
-            Connection[0] = Driver.Connect(endpoint);
+            connection[0] = driver.Connect(endpoint);
+
+            state.EntityManager.CreateSingleton(new ClientNetworkConfig()
+            {
+                Driver = driver, 
+                Connection = connection, 
+                Done = done,
+                FragmentedPipeline = fragmentedPipeline
+            });
         }
-        
+
         [BurstCompile]
         public void OnDestroy(ref SystemState state)
         {
             ClientJobHandle.Complete();
 
-            Connection.Dispose();
-            Driver.Dispose();
-            Done.Dispose();
+            ClientNetworkConfig.Connection.Dispose();
+            ClientNetworkConfig.Driver.Dispose();
+            ClientNetworkConfig.Done.Dispose();
         }
 
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            ClientNetworkConfig = SystemAPI.GetSingleton<ClientNetworkConfig>();
             ClientJobHandle.Complete();
-            
-            ClientUpdateJob job = new ()
+
+            ClientUpdateJob job = new()
             {
-                Driver = Driver,
-                Connection = Connection,
-                Done = Done
+                Driver = ClientNetworkConfig.Driver,
+                Connection = ClientNetworkConfig.Connection,
+                Done = ClientNetworkConfig.Done
             };
-            
-            ClientJobHandle = Driver.ScheduleUpdate();
+
+            ClientJobHandle = ClientNetworkConfig.Driver.ScheduleUpdate();
             ClientJobHandle = job.Schedule(ClientJobHandle);
         }
 
