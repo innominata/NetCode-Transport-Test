@@ -146,6 +146,17 @@
         "com.unity.rendering.light-transport": "1.0.0"
       }
     },
+    "com.unity.render-pipelines.universal": {
+      "version": "16.0.5",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.1",
+        "com.unity.burst": "1.8.9",
+        "com.unity.render-pipelines.core": "16.0.5",
+        "com.unity.shadergraph": "16.0.5"
+      }
+    },
     "com.unity.rendering.light-transport": {
       "version": "1.0.1",
       "depth": 2,
@@ -158,6 +169,13 @@
     },
     "com.unity.scriptablebuildpipeline": {
       "version": "1.21.22",
+      "depth": 2,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.searcher": {
+      "version": "4.9.2",
       "depth": 2,
       "source": "registry",
       "dependencies": {},
@@ -179,6 +197,15 @@
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
+    },
+    "com.unity.shadergraph": {
+      "version": "16.0.5",
+      "depth": 1,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.render-pipelines.core": "16.0.5",
+        "com.unity.searcher": "4.9.2"
+      }
     },
     "com.unity.test-framework": {
       "version": "1.4.3",
