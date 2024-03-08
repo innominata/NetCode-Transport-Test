@@ -4,8 +4,9 @@ using Unity.Entities;
 using Unity.Networking.Transport;
 using UnityEngine;
 
-namespace DefaultNamespace
+namespace Systems
 {
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct ServerSystem : ISystem
     {
         public NetworkDriver Driver;
