@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Logging;
 using Unity.Networking.Transport;
+using UnityEditor.PackageManager;
 
 namespace Systems.Clients
 {
@@ -103,19 +104,23 @@ namespace Systems.Clients
                         }
                         case NetworkEvent.Type.Data:
                         {
-                            Log.Info("Receiving TestCommands");
-                            TestCommands testCommands = new TestCommands();
-                            testCommands.Deserialize(ref stream);
                             
-                            foreach (uint u in testCommands.List)
-                            {
-                                Log.Info("Receiving - " + u);
-                            }
-                          
+                            int id = stream.ReadUShort();
+                            Log.Info("Receiving - " + id);
+                            StructRegistry.Deserialize(ref stream, id);
+                            // Log.Info("Receiving TestCommands");
+                            // TestCommands testCommands = new TestCommands();
+                            // testCommands.Deserialize(ref stream);
+                            
+                            // foreach (uint u in testCommands.List)
+                            // {
+                            //     Log.Info("Receiving - " + u);
+                            // }
+                            //
                             Done[0] = true;
                             Connection[0].Disconnect(Driver);
                             Connection[0] = default;
-                            testCommands.Dispose();
+                            // testCommands.Dispose();
                             break;
                         }
                         case NetworkEvent.Type.Disconnect:

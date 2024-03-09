@@ -22,6 +22,7 @@ namespace Systems.Server
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            StructRegistry.RegisterAllStructs();
             state.RequireForUpdate<ServerNetworkConfig>();
 
 
@@ -102,21 +103,29 @@ namespace Systems.Server
                 {
                     case NetworkEvent.Type.Data:
                     {
-                        TestCommands testCommands = new()
-                        {
-                            List = new NativeList<ushort>(694,Allocator.Temp)
-                        };
 
-                        for (ushort i = 0; i < 694; i++)
-                        {
-                            testCommands.List.Add(i);
-                        }
-                        
+                        // TestCommands testCommands = new()
+                        // {
+                        //     ListLength = 10
+                        // };
+                        //
+                        // NativeList<ushort> tempList = new NativeList<ushort>(10, Allocator.Temp);
+                        // for (ushort i = 0; i < 10; i++)
+                        // {
+                        //     tempList.Add(i);
+                        // }
+                        // testCommands.SetList(tempList);
+                        // tempList.Dispose();
                         Driver.BeginSend(Connections[index], out DataStreamWriter writer);
-                        testCommands.Serialize(ref writer);
+                        
+                        // testCommands.Serialize(ref writer);
+                        Test2 test2 = new()
+                        {
+                            RegistryID = 0
+                        };
+                        test2.Serialize(ref writer);
                         Driver.EndSend(writer);
                         Log.Info("Sending TestCommands");
-                        testCommands.Dispose();
                         break;
                     }
                     case NetworkEvent.Type.Disconnect:
