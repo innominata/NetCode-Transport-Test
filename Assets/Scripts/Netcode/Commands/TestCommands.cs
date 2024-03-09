@@ -1,6 +1,4 @@
 ﻿using Unity.Collections;
-using Unity.Entities;
-using Unity.Logging;
 
 namespace Netcode.Commands
 {
@@ -9,11 +7,11 @@ namespace Netcode.Commands
         public NativeList<ushort> List;
         public void Serialize(ref DataStreamWriter writer)
         {
-            Log.Debug(!writer.WriteUShort((ushort) List.Length) ? "error" : "good");
+            writer.WriteUShort((ushort)List.Length);
             
             foreach (ushort i in List)
             {
-                Log.Debug(!writer.WriteUShort(i) ? "error" : "good");
+                writer.WriteUShort(i);
             }
         }
 
