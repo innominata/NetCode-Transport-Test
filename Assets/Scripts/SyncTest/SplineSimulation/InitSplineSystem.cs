@@ -32,10 +32,8 @@ namespace SyncTest.SplineSimulation
                 float3 offset = new float3(i * 0.1f, 0, 0);
                 float3 currentStart = startBase + offset;
                 float3 currentEnd = endBase + offset;
-                ecb.AddComponent<EntityUniqueID>(spline, new EntityUniqueID()
-                {
-                    ID = ID.GetFreeID()
-                });
+          
+                ecb.AddComponent<EntityUniqueID>(spline, ID.GetUniqueID());
                 ecb.AddComponent<SplinePositions>(spline, new SplinePositions()
                 {
                     Start = currentStart,

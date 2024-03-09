@@ -26,18 +26,15 @@ namespace SyncTest.SplineSimulation
 
             if (_delta >= 2.0f)
             {
-                int count = 10000; 
                 foreach ((SplinePositions spline, Entity entity) in SystemAPI.Query<SplinePositions>().WithEntityAccess())
                 {
                     Entity newUnit = ecb.CreateEntity();
-                    newUnit.Index = count;
                     ecb.AddComponent(newUnit, new SplineProgress()
                     {
                         Position = 0,
                         Spline = entity
                     });
                     ecb.AddComponent(newUnit, UT.GetLTFrom(spline.Start, quaternion.identity, 1f));
-                    count++;
                 }
 
                 _delta -= 2.0f;
@@ -46,7 +43,5 @@ namespace SyncTest.SplineSimulation
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }
-        
-       
     }
 }

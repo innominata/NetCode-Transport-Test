@@ -11,13 +11,14 @@ namespace Systems.Common
             state.EntityManager.CreateSingleton(new EntityUniqueIDSingleton()
             {
                 NextAvailableID = 0,
-                FreeID = new NativeList<uint>(1024, Allocator.Persistent)
+                FreeID = new NativeList<uint>(1024, Allocator.Persistent) ,
+                DB= new NativeHashMap<uint, Entity>(1024, Allocator.Persistent)
             });
         }
 
         public void OnDestroy(ref SystemState state)
         {
-            SystemAPI.GetSingleton<EntityUniqueIDSingleton>().FreeID.Dispose();
+            SystemAPI.GetSingleton<EntityUniqueIDSingleton>().Dispose();
         }
 
         public void OnUpdate(ref SystemState state) { }
