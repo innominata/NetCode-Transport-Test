@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Logging;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Utilities;
 
 namespace Systems.Clients
 {
@@ -21,7 +22,9 @@ namespace Systems.Clients
             state.RequireForUpdate<ClientNetworkConfig>();
             
             NetworkSettings settings = new();
+            settings.WithFragmentationStageParameters(payloadCapacity: 8192);
             NetworkDriver driver = NetworkDriver.Create(settings);
+            
             NetworkPipeline fragmentedPipeline = driver.CreatePipeline(typeof(FragmentationPipelineStage));
             NativeArray<NetworkConnection> connection = new (1, Allocator.Persistent);
             NativeArray<bool> done = new (1, Allocator.Persistent);
@@ -73,6 +76,7 @@ namespace Systems.Clients
             public NetworkDriver Driver;
             public NativeArray<NetworkConnection> Connection;
             public NativeArray<bool> Done;
+            public NetworkPipeline FragmentedPipeline;
 
             public void Execute()
             {
@@ -109,7 +113,7 @@ namespace Systems.Clients
                             
                             foreach (uint u in testCommands.List)
                             {
-                                Log.Info("Receiving - " + u);
+                                Log.Info(u);
                             }
                           
                             Done[0] = true;

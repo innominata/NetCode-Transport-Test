@@ -3,11 +3,11 @@ using Unity.Entities;
 
 namespace Netcode.Commands
 {
-    public interface ISerializableCommand<T> where T : struct, IComponentData
+    public interface ISerializableCommand<T> where T : struct, INetworkCommand
     {
         void Serialize(ref DataStreamWriter writer);
         void Deserialize(ref DataStreamReader reader);
     }
 
-    public interface IRpcCommand : IComponentData { }
+    public interface INetworkCommand : IComponentData { }
 }

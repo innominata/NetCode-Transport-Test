@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.Jobs;
 using Unity.Logging;
 using Unity.Networking.Transport;
+using Unity.Networking.Transport.Utilities;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -19,14 +20,17 @@ namespace Systems.Server
 
         private JobHandle _serverJobHandle;
 
-        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<ServerNetworkConfig>();
 
 
             NativeList<NetworkConnection> connections = new(16, Allocator.Persistent);
-            NetworkDriver driver = NetworkDriver.Create();
+
+            NetworkSettings settings = new();
+            settings.WithFragmentationStageParameters(payloadCapacity: 8192);
+            NetworkDriver driver = NetworkDriver.Create(settings);
+            NetworkPipeline fragmentedPipeline = driver.CreatePipeline(typeof(FragmentationPipelineStage));
 
             NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4;
             endpoint.Port = 9001;
@@ -43,7 +47,8 @@ namespace Systems.Server
             ServerNetworkConfig config = new()
             {
                 Connections = connections,
-                Driver = driver
+                Driver = driver,
+                FragmentedPipeline = fragmentedPipeline
             };
 
             state.EntityManager.CreateSingleton(config);
@@ -63,7 +68,7 @@ namespace Systems.Server
         public void OnUpdate(ref SystemState state)
         {
             ServerNetworkConfig = SystemAPI.GetSingleton<ServerNetworkConfig>();
-            
+
             _serverJobHandle.Complete();
 
             ServerUpdateConnectionsJob connectionJob = new()
@@ -75,7 +80,8 @@ namespace Systems.Server
             ServerUpdateJob serverUpdateJob = new()
             {
                 Driver = ServerNetworkConfig.Driver.ToConcurrent(),
-                Connections = ServerNetworkConfig.Connections.AsDeferredJobArray()
+                Connections = ServerNetworkConfig.Connections.AsDeferredJobArray(),
+                FragmentedPipeline = ServerNetworkConfig.FragmentedPipeline
             };
 
             _serverJobHandle = ServerNetworkConfig.Driver.ScheduleUpdate();
@@ -89,6 +95,7 @@ namespace Systems.Server
     {
         public NetworkDriver.Concurrent Driver;
         public NativeArray<NetworkConnection> Connections;
+        public NetworkPipeline FragmentedPipeline;
 
         public void Execute(int index)
         {
@@ -104,15 +111,16 @@ namespace Systems.Server
                     {
                         TestCommands testCommands = new()
                         {
-                            List = new NativeList<ushort>(694,Allocator.Temp)
+                            List = new NativeList<ushort>(4095, Allocator.Temp)
                         };
 
-                        for (ushort i = 0; i < 694; i++)
+                        for (ushort i = 0; i < 4095; i++)
                         {
                             testCommands.List.Add(i);
                         }
-                        
-                        Driver.BeginSend(Connections[index], out DataStreamWriter writer);
+
+
+                        Driver.BeginSend(FragmentedPipeline, Connections[index], out DataStreamWriter writer);
                         testCommands.Serialize(ref writer);
                         Driver.EndSend(writer);
                         Log.Info("Sending TestCommands");

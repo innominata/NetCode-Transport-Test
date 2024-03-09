@@ -1,18 +1,19 @@
 ﻿using Unity.Collections;
 using Unity.Entities;
+using Unity.Logging;
 
 namespace Netcode.Commands
 {
-    public struct TestCommands : IComponentData,  ISerializableCommand<TestCommands>
+    public struct TestCommands : INetworkCommand,  ISerializableCommand<TestCommands>
     {
         public NativeList<ushort> List;
         public void Serialize(ref DataStreamWriter writer)
         {
-            writer.WriteUShort((ushort) List.Length);
+            Log.Debug(!writer.WriteUShort((ushort) List.Length) ? "error" : "good");
             
             foreach (ushort i in List)
             {
-                writer.WriteUShort(i);
+                Log.Debug(!writer.WriteUShort(i) ? "error" : "good");
             }
         }
 
