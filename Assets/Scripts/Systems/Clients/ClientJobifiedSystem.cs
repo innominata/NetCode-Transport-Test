@@ -1,5 +1,6 @@
 ﻿using System;
 using Components;
+using Netcode.Commands;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -102,11 +103,19 @@ namespace Systems.Clients
                         }
                         case NetworkEvent.Type.Data:
                         {
-                            uint value = stream.ReadUInt();
-                            Log.Info("Got the value = " + value + " back from the server");
+                            Log.Info("Receiving TestCommands");
+                            TestCommands testCommands = new TestCommands();
+                            testCommands.Deserialize(ref stream);
+                            
+                            foreach (uint u in testCommands.List)
+                            {
+                                Log.Info("Receiving - " + u);
+                            }
+                          
                             Done[0] = true;
                             Connection[0].Disconnect(Driver);
                             Connection[0] = default;
+                            testCommands.Dispose();
                             break;
                         }
                         case NetworkEvent.Type.Disconnect:

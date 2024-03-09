@@ -1,5 +1,6 @@
 ﻿using System;
 using Components;
+using Netcode.Commands;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -101,14 +102,18 @@ namespace Systems.Server
                 {
                     case NetworkEvent.Type.Data:
                     {
-                        uint number = stream.ReadUInt();
-
-                        Log.Info("Got " + number + " from the Client adding + 2 to it.");
-                        number += 2;
-
+                        TestCommands testCommands = new()
+                        {
+                            List = new NativeList<uint>(Allocator.Temp)
+                            {
+                                1, 2, 3, 4, 5
+                            }
+                        };
                         Driver.BeginSend(Connections[index], out DataStreamWriter writer);
-                        writer.WriteUInt(number);
+                        testCommands.Serialize(ref writer);
                         Driver.EndSend(writer);
+                        Log.Info("Sending TestCommands");
+                        testCommands.Dispose();
                         break;
                     }
                     case NetworkEvent.Type.Disconnect:
