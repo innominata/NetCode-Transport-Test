@@ -104,11 +104,14 @@ namespace Systems.Server
                     {
                         TestCommands testCommands = new()
                         {
-                            List = new NativeList<uint>(Allocator.Temp)
-                            {
-                                1, 2, 3, 4, 5
-                            }
+                            List = new NativeList<ushort>(694,Allocator.Temp)
                         };
+
+                        for (ushort i = 0; i < 694; i++)
+                        {
+                            testCommands.List.Add(i);
+                        }
+                        
                         Driver.BeginSend(Connections[index], out DataStreamWriter writer);
                         testCommands.Serialize(ref writer);
                         Driver.EndSend(writer);

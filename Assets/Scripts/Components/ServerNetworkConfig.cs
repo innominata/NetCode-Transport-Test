@@ -9,5 +9,6 @@ namespace Components
     {
         public NetworkDriver Driver;
         public NativeList<NetworkConnection> Connections;
+        public NetworkPipeline FragmentedPipeline;
     }
 }
